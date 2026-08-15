@@ -18,15 +18,15 @@ def inicializar_banco():
     tabela_existe = cursor.fetchone()
     
     if not tabela_existe:
-        print("⚙️ Criando tabelas no banco de dados a partir do dados.sql...")
+        print("Criando tabelas no banco de dados a partir do dados.sql...")
         if os.path.exists(caminho_sql):
             with open(caminho_sql, 'r', encoding='utf-8') as f:
                 script_sql = f.read()
             cursor.executescript(script_sql)
             conexao.commit()
-            print("✅ Tabelas criadas com sucesso!\n")
+            print("Tabelas criadas com sucesso!\n")
         else:
-            print(f"❌ Erro: Arquivo 'dados.sql' não foi encontrado em: {caminho_sql}")
+            print(f"Erro: Arquivo 'dados.sql' não foi encontrado em: {caminho_sql}")
             
     conexao.close()
 
@@ -56,15 +56,38 @@ def cadastrar_usuario(nome, email, senha_texto_puro, perfil_id):
         cursor.execute(sql, (nome, email, senha_criptografada, perfil_id))
         conexao.commit()
         
-        print(f"✅ Usuário '{nome}' cadastrado com sucesso!")
-        print(f"🔒 Hash salvo no banco: {senha_criptografada}\n")
+        print(f"Usuário '{nome}' cadastrado com sucesso!")
+        print(f"Hash salvo no banco: {senha_criptografada}\n")
         
     except sqlite3.IntegrityError:
-        print("❌ Erro: O e-mail informado já está cadastrado.")
+        print("Erro: O e-mail informado já está cadastrado.")
     except Exception as e:
-        print(f"❌ Erro ao cadastrar usuário: {e}")
+        print(f"Erro ao cadastrar usuário: {e}")
     finally:
         conexao.close()
+
+# 3. Função para registrar eventos de auditoria no banco 
+def registrar_log(usuario_id, acao, ip_origem, detalhes):
+    try:
+        conexao = sqlite3.connect('sistema_seguranca.db')
+        cursor = conexao.cursor()
+        
+        sql = """
+            INSERT INTO logs_auditoria (usuario_id, acao, ip_origem, detalhes)
+            VALUES (?, ?, ?, ?)
+        """
+        
+        cursor.execute(sql, (usuario_id, acao, ip_origem, detalhes))
+        conexao.commit()
+        
+        print(f"Log de auditoria registrado: Usuário {usuario_id}, Ação: {acao}")
+        
+    except Exception as e:
+        print(f"Erro ao registrar log de auditoria: {e}")
+    finally:
+        conexao.close()
+
+# 4. Função para autenticar o usuário
 
 
 # --- EXECUÇÃO ---

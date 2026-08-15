@@ -1,3 +1,0 @@
-# Sistema de Controle de Acesso RBAC com Autentica o Segura e Registro de Logs de Auditoria
-
-Perguntei para o meu Gemini se ele tem alguma ideia boa para um projeto pessoal para eu poder testar as minhas habilidades de programação, e ele me sugeriu essa ideia. Eu acho interessante os conceitos de Cybersegurança e Análise de Dados, então quando ele me deu essa ideia de fazer esse projeto, eu sinceramente eu gostei dela.
