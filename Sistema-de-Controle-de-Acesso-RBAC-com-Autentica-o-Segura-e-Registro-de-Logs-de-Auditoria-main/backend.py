@@ -127,6 +127,22 @@ def autenticar_usuario(email, senha_texto_puro, ip_origem="127.0.0.1"):
     except Exception as e:
         print(f"❌ Erro durante o login: {e}")
         return False
+
+#5. Função de Verificação de Permissões (RBAC)
+def verificar_permissao(perfil_id, perfis_permitidos):
+    """
+    Mapeamento de Perfis do Banco:
+    1 - ADMIN
+    2 - ANALISTA_SEGURANCA
+    3 - USUARIO
+    """
+    return perfil_id in perfis_permitidos
+
+#6. Função para exibir logs de auditoria(Acesso Restrito)
+
+
+
+
 if __name__ == "__main__":
     inicializar_banco()
     
