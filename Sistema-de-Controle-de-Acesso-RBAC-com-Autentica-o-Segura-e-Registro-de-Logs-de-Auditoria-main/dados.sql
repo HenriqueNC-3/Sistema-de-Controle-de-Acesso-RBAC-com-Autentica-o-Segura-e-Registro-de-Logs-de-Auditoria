@@ -16,7 +16,7 @@ CREATE TABLE IF NOT EXISTS usuarios(
 
 CREATE TABLE IF NOT EXISTS logs_auditoria(
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    usuario_id INTEGER NOT NULL,
+    usuario_id INTEGER NULL,
     acao VARCHAR(255) NOT NULL,
     ip_origem VARCHAR(45) NOT NULL,
     detalhes TEXT,

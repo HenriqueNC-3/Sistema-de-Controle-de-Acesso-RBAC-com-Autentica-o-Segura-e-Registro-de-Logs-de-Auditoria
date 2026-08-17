@@ -52,7 +52,6 @@ def cadastrar_usuario(nome, email, senha_texto_puro, perfil_id):
             VALUES (?, ?, ?, ?)
         """
         
-        cursor.execute(sql, (nome, email, senha_texto_puro, perfil_id)) # atencao aqui
         cursor.execute(sql, (nome, email, senha_criptografada, perfil_id))
         conexao.commit()
         
@@ -128,14 +127,24 @@ def autenticar_usuario(email, senha_texto_puro, ip_origem="127.0.0.1"):
     except Exception as e:
         print(f"❌ Erro durante o login: {e}")
         return False
-# --- EXECUÇÃO ---
 if __name__ == "__main__":
     inicializar_banco()
     
+    # Tenta cadastrar (se já existir, o banco apenas avisa)
+    cadastrar_usuario(
+        nome="Henrique Cerqueira",
+        email="henrique@email.com",
+        senha_texto_puro="MinhaSenhaSuperSegura123",
+        perfil_id=1
+    )
+    
     print("\n--- TESTANDO AUTENTICAÇÃO E AUDITORIA ---")
     
-    # 1. Teste de login com senha incorreta (deve gerar log de falha)
-    autenticar_usuario("henrique@email.com", "SenhaErrada123")
+    # Cenário 1: E-mail inexistente (Gera log com Usuário None)
+    autenticar_usuario("nao_existe@email.com", "123456")
     
-    # 2. Teste de login com sucesso (deve gerar log de sucesso)
+    # Cenário 2: E-mail correto, mas SENHA ERRADA (Gera log de LOGIN_FALHA vinculando ao ID do usuário)
+    autenticar_usuario("henrique@email.com", "SenhaIncorreta123")
+    
+    # Cenário 3: E-mail correto e SENHA CORRETA (Gera log de LOGIN_SUCESSO e concede acesso)
     autenticar_usuario("henrique@email.com", "MinhaSenhaSuperSegura123")
