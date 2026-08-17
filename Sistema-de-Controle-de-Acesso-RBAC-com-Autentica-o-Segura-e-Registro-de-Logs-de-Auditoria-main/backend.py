@@ -87,9 +87,47 @@ def registrar_log(usuario_id, acao, ip_origem, detalhes):
     finally:
         conexao.close()
 
-# 4. Função para autenticar o usuário
 
+# 4. Função de Login / Autenticação
+def autenticar_usuario(email, senha_texto_puro, ip_origem="127.0.0.1"):
+    try:
+        conexao = sqlite3.connect('sistema_seguranca.db')
+        cursor = conexao.cursor()
+        
+        # Busca o usuário pelo e-mail de forma segura
+        sql = "SELECT id, nome, senha_hash, perfil_id FROM usuarios WHERE email = ?"
+        cursor.execute(sql, (email,))
+        usuario = cursor.fetchone()
+        conexao.close()
+        
+        # Caso 1: E-mail não encontrado
+        if not usuario:
+            print(" Falha no login: Usuário não encontrado.")
+            registrar_log(None, 'LOGIN_FALHA', ip_origem, f'Tentativa de login com e-mail inexistente: {email}')
+            return False
+        
+        usuario_id, nome, senha_hash_banco, perfil_id = usuario
+        
+        # Valida a senha usando o bcrypt
+        senha_correta = bcrypt.checkpw(
+            senha_texto_puro.encode('utf-8'), 
+            senha_hash_banco.encode('utf-8')
+        )
+        
+        # Caso 2: Senha incorreta
+        if not senha_correta:
+            print(f" Falha no login para {email}: Senha incorreta.")
+            registrar_log(usuario_id, 'LOGIN_FALHA', ip_origem, 'Senha incorreta informada.')
+            return False
+        
+        # Caso 3: Login efetuado com sucesso!
+        print(f" Login bem-sucedido! Bem-vindo(a), {nome}.")
+        registrar_log(usuario_id, 'LOGIN_SUCESSO', ip_origem, 'Autenticação realizada com sucesso.')
+        return True
 
+    except Exception as e:
+        print(f"❌ Erro durante o login: {e}")
+        return False
 # --- EXECUÇÃO ---
 if __name__ == "__main__":
     # Garante que o banco e as tabelas existam antes de cadastrar
