@@ -130,13 +130,12 @@ def autenticar_usuario(email, senha_texto_puro, ip_origem="127.0.0.1"):
         return False
 # --- EXECUÇÃO ---
 if __name__ == "__main__":
-    # Garante que o banco e as tabelas existam antes de cadastrar
     inicializar_banco()
     
-    # Cadastra o usuário
-    cadastrar_usuario(
-        nome="Henrique Cerqueira",
-        email="henrique@email.com",
-        senha_texto_puro="MinhaSenhaSuperSegura123",
-        perfil_id=1
-    )
+    print("\n--- TESTANDO AUTENTICAÇÃO E AUDITORIA ---")
+    
+    # 1. Teste de login com senha incorreta (deve gerar log de falha)
+    autenticar_usuario("henrique@email.com", "SenhaErrada123")
+    
+    # 2. Teste de login com sucesso (deve gerar log de sucesso)
+    autenticar_usuario("henrique@email.com", "MinhaSenhaSuperSegura123")
