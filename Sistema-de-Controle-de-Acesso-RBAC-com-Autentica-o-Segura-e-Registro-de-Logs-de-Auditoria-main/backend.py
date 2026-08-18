@@ -175,24 +175,71 @@ def visualizar_logs_auditoria(perfil_usuario_logado):
     except Exception as e:
         print(f" Erro ao consultar logs: {e}")
 
-if __name__ == "__main__":
+def menu_principal():
     inicializar_banco()
-    
-    EMAIL_TESTE = "henrique@email.com"
-    SENHA_CORRETA = "MinhaSenhaSuperSegura123"
-    
-    # Cadastra um Administrador (perfil_id = 1)
-    cadastrar_usuario("Henrique Admin", EMAIL_TESTE, SENHA_CORRETA, perfil_id=1)
-    
-    # Cadastra um Usuário Comum (perfil_id = 3)
-    cadastrar_usuario("João Comum", "joao@email.com", "SenhaComum123", perfil_id=3)
-    
-    print("\n--- TESTANDO CONTROLE DE ACESSO (RBAC) ---")
-    
-    # 1. Tentativa de acesso aos logs por um Usuário Comum (Perfil 3)
-    print("\n[Teste 1] Usuário comum tentando acessar logs de auditoria:")
-    visualizar_logs_auditoria(perfil_usuario_logado=3)
-    
-    # 2. Acesso aos logs por um Administrador (Perfil 1)
-    print("[Teste 2] Administrador acessando logs de auditoria:")
-    visualizar_logs_auditoria(perfil_usuario_logado=1)
+
+    usuario_logado = None
+
+    while True:
+        print("SISTEMA DE SEGURANÇA - MENU PRINCIPAL")
+
+        if usuario_logado:
+            print(f"Usuário logado: {usuario_logado['nome']} (Perfil ID: {usuario_logado['perfil_id']})")
+            print("1. Visualizar Logs de Auditoria")
+            print("2. Logout")
+            print("3. Sair do Sistema")
+        else:
+            print("1. Login")
+            print("2. Cadastrar Usuário")
+            print("3. Sair do Sistema")
+
+        opcao = input("Escolha uma opção: ").strip()
+
+        if not usuario_logado:
+            if opcao == '1':
+                print("\n=== LOGIN ===")
+                email = input("E-mail: ").strip()
+                senha = input("Senha: ").strip()
+
+                conexao = sqlite3.connect('sistema_seguranca.db')
+                cursor = conexao.cursor()
+                cursor.execute("SELECT id, nome, senha_hash, perfil_id FROM usuarios WHERE email = ?", (email,))
+                usuario = cursor.fetchone()
+                conexao.close()
+
+                if usuario and autenticar_usuario(email, senha):
+                    usuario_logado = {
+                        'id': usuario[0],
+                        'nome': usuario[1],
+                        'perfil_id': usuario[3]
+                    }
+            elif opcao == '2':
+                print("\n=== CADASTRO DE USUÁRIO ===")
+                nome = input("Nome Completo: ")
+                email = input("E-mail: ")
+                senha = input("Senha: ")
+                print("Perfis disponíveis: 1 - ADMIN, 2 - ANALISTA_SEGURANCA, 3 - USUARIO")
+
+                try:
+                    perfil_id = int(input("Escolha o Perfil (1, 2 ou 3): "))
+                    cadastrar_usuario(nome, email, senha, perfil_id)
+                except ValueError:
+                    print("Perfil inválido. Por favor, insira um número inteiro (1, 2 ou 3).")
+            elif opcao == '3':
+                print("Saindo do sistema...")
+                break
+        else:
+            if opcao == '1':
+                visualizar_logs_auditoria(perfil_usuario_logado = usuario_logado['perfil_id'])
+            elif opcao == '2':
+                print(f"Usuário {usuario_logado['nome']} deslogado com sucesso.")
+                usuario_logado = None
+            elif opcao == '3':
+                print("Saindo do sistema...")
+                break
+            else:
+                print("Opção inválida. Tente novamente.")
+
+                
+if __name__ == "__main__":
+    menu_principal()
