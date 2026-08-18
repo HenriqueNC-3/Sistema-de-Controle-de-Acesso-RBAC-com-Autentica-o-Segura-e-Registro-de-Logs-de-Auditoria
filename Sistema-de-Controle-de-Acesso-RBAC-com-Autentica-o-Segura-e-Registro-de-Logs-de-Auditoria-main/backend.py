@@ -125,7 +125,7 @@ def autenticar_usuario(email, senha_texto_puro, ip_origem="127.0.0.1"):
         return True
 
     except Exception as e:
-        print(f"❌ Erro durante o login: {e}")
+        print(f"Erro durante o login: {e}")
         return False
 
 #5. Função de Verificação de Permissões (RBAC)
@@ -140,27 +140,59 @@ def verificar_permissao(perfil_id, perfis_permitidos):
 
 #6. Função para exibir logs de auditoria(Acesso Restrito)
 
+def visualizar_logs_auditoria(perfil_usuario_logado):
+    perfis_permitidos = [1, 2]  # ADMIN e ANALISTA_SEGURANCA
+    if not verificar_permissao(perfil_usuario_logado, perfis_permitidos):
+        print("Acesso negado: Você não tem permissão para visualizar os logs de auditoria.")
+        return
+    try:
+        conexao = sqlite3.connect('sistema_seguranca.db')
+        cursor = conexao.cursor()
 
+        sql = """ SELECT 
+                l.id, 
+                COALESCE(u.email, 'Usuário não encontrado') AS usuario,
+                l.acao,
+                l.ip_origem,
+                l.detalhes,
+                l.data_hora
+                FROM logs_auditoria l
+                LEFT JOIN usuarios u ON l.usuario_id = u.id
+                ORDER BY l.data_hora DESC
+                LIMIT 10
+        """
+        cursor.execute(sql)
+        logs = cursor.fetchall()
+        conexao.close()
+        print("\n=== 📜 RELATÓRIO DE AUDITORIA DE SEGURANÇA (ÚLTIMOS EVENTOS) ===")
+        print(f"{'ID':<4} | {'Usuário':<25} | {'Ação':<15} | {'IP':<15} | {'Data/Hora'}")
+        print("-" * 80)
+        for log in logs:
+            log_id, usuario, acao, ip, detalhes, data_hora = log
+            print(f"{log_id:<4} | {usuario:<25} | {acao:<15} | {ip:<15} | {data_hora}")
+        print("-" * 80 + "\n")
 
+    except Exception as e:
+        print(f" Erro ao consultar logs: {e}")
 
 if __name__ == "__main__":
     inicializar_banco()
     
-    # Tenta cadastrar (se já existir, o banco apenas avisa)
-    cadastrar_usuario(
-        nome="Henrique Cerqueira",
-        email="henrique@email.com",
-        senha_texto_puro="MinhaSenhaSuperSegura123",
-        perfil_id=1
-    )
+    EMAIL_TESTE = "henrique@email.com"
+    SENHA_CORRETA = "MinhaSenhaSuperSegura123"
     
-    print("\n--- TESTANDO AUTENTICAÇÃO E AUDITORIA ---")
+    # Cadastra um Administrador (perfil_id = 1)
+    cadastrar_usuario("Henrique Admin", EMAIL_TESTE, SENHA_CORRETA, perfil_id=1)
     
-    # Cenário 1: E-mail inexistente (Gera log com Usuário None)
-    autenticar_usuario("nao_existe@email.com", "123456")
+    # Cadastra um Usuário Comum (perfil_id = 3)
+    cadastrar_usuario("João Comum", "joao@email.com", "SenhaComum123", perfil_id=3)
     
-    # Cenário 2: E-mail correto, mas SENHA ERRADA (Gera log de LOGIN_FALHA vinculando ao ID do usuário)
-    autenticar_usuario("henrique@email.com", "SenhaIncorreta123")
+    print("\n--- TESTANDO CONTROLE DE ACESSO (RBAC) ---")
     
-    # Cenário 3: E-mail correto e SENHA CORRETA (Gera log de LOGIN_SUCESSO e concede acesso)
-    autenticar_usuario("henrique@email.com", "MinhaSenhaSuperSegura123")
+    # 1. Tentativa de acesso aos logs por um Usuário Comum (Perfil 3)
+    print("\n[Teste 1] Usuário comum tentando acessar logs de auditoria:")
+    visualizar_logs_auditoria(perfil_usuario_logado=3)
+    
+    # 2. Acesso aos logs por um Administrador (Perfil 1)
+    print("[Teste 2] Administrador acessando logs de auditoria:")
+    visualizar_logs_auditoria(perfil_usuario_logado=1)
